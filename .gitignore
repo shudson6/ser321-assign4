@@ -10,3 +10,6 @@ test*.cpp
 
 # binaries
 bin/
+
+# assignment miscellany
+Assign4/
