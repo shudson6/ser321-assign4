@@ -1,0 +1,43 @@
+<project name="SER321 Assign4 C++ Music Library Client" default="targets" basedir="." xmlns="antlib:org.apache.tools.ant">
+
+	<taskdef resource="cpptasks.tasks"/>
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+
+	<property name="src" value="./src"/>
+	<property name="src.client" value="${src}/client"/>
+	<property name="bin" value="./bin"/>
+	<property name="exe" value="test"/>
+	<property name="lastfmkey" value="none"/>
+
+	<target name="targets">
+		<echo message="hello! I haven't been finished yet."/>
+	</target>
+
+	<target name="clean">
+		<delete dir="${bin}"/>
+	</target>
+
+	<target name="prepare">
+		<tstamp/>
+		<mkdir dir="${bin}"/>
+	</target>
+
+	<target name="build" depends="prepare">
+		<cc outtype="executable" subsystem="console" outfile="${bin}/${exe}">
+			<compilerarg value="-std=c++14"/>
+			<includepath>
+				<dirset dir="/" includes="usr/include,usr/local/include,usr/include/jsoncpp"/>
+			</includepath>
+			<libset dir="/usr/lib" libs="stdc++,fltk,fltk_images,curl,jsoncpp,pthread"/>
+			<libset dir="/usr/local/lib" libs="curlpp"/>
+			<fileset dir="${src.client}" includes="*.cpp"/>
+		</cc>
+	</target>
+
+	<target name="execute" depends="build">
+		<exec executable="${bin}/${exe}">
+			<arg line="${lastfmkey}"/>
+		</exec>
+	</target>
+
+</project>

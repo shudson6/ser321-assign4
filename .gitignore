@@ -1,0 +1,12 @@
+# vi's backups
+*.swp
+
+# test stuff and exec scripts (contains my api key)
+src/test/
+test
+test*.cpp
+*.sh
+*.bat
+
+# binaries
+bin/
