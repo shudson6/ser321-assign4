@@ -13,3 +13,10 @@ bin/
 
 # assignment miscellany
 Assign4/
+
+# intermediate files created when checking syntax with -S
+*.s
+*.gch
+
+# what in the world is this for?
+history.xml

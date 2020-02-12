@@ -8,6 +8,7 @@
 	<property name="bin" value="./bin"/>
 	<property name="exe" value="test"/>
 	<property name="lastfmkey" value="none"/>
+	<property name="checkfile" value=""/>
 
 	<target name="targets">
 		<echo message="hello! I haven't been finished yet."/>
@@ -40,7 +41,7 @@
 		</exec>
 	</target>
 
-	<target name="test">
+	<target name="test" depends="prepare">
 		<cc outtype="executable" subsystem="console" outfile="${bin}/test">
 			<compilerarg value="-std=c++14"/>
 			<compilerarg value="-g"/>
@@ -55,6 +56,17 @@
 		<exec executable="${bin}/test">
 			<arg line="${lastfmkey}"/>
 		</exec>
+	</target>
+
+	<target name="check">
+		<cc>
+			<compilerarg value="-std=c++14"/>
+			<compilerarg value="-S"/>
+			<includepath>
+				<dirset dir="/" includes="usr/include,usr/local/include,usr/include/jsoncpp"/>
+			</includepath>
+			<fileset dir="${src.client}" includes="${checkfile}"/>
+		</cc>
 	</target>
 
 </project>
