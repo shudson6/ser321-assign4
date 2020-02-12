@@ -29,14 +29,17 @@ Album AlbumFinder::query(string& title, string& artist) {
 }
 
 string AlbumFinder::buildUrlStr(string& title, string& artist) {
+	trim(title);
+	trim(artist);
 	// get a large enough buffer for the url (could -6 for the %s but nah)
 	int len = strlen(URLFMT) + title.length() + artist.length() + lastfmKey.length();
 	char* const buf = new char[len];
 	// create url string
 	snprintf(buf, len, URLFMT, artist.c_str(), title.c_str(), lastfmKey.c_str());
 	string url(buf);
-	// destroy the buffer and return the string
+	// destroy the buffer then remove spaces and return the string
 	delete [] buf;
+	wsToPlus(url);
 	return url;
 }
 
@@ -112,4 +115,30 @@ string AlbumFinder::parseImg(Json::Value imgArr) {
 		}
 	}
 	return "null";
+}
+
+string& AlbumFinder::trim(string& str) {
+	// right trim
+	while (str.length() > 0 && isWhiteSpace(str[str.length() - 1])) {
+		str.erase(str.length() - 1, 1);
+	}
+	// left trim
+	while (str.length() > 0 && isWhiteSpace(str[0])) {
+		str.erase(0, 1);
+	}
+	return str;
+}
+
+bool AlbumFinder::isWhiteSpace(char& c) {
+	return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+}
+
+string& AlbumFinder::wsToPlus(string& str) {
+	int pos;
+	for (int i = 0; i < str.length(); ++i) {
+		if (isWhiteSpace(str[i])) {
+			str.replace(i, 1, 1, '+');
+		}
+	}
+	return str;
 }

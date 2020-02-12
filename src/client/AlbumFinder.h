@@ -25,8 +25,11 @@ class AlbumFinder {
 		std::vector<string> parseGenres(Json::Value);
 		string parseImg(Json::Value);
 
+		static string& trim(string&);
+		static string& wsToPlus(string&);
+		static bool isWhiteSpace(char&);
+
 		static const char* const URLFMT;
-		
 };
 
 class AlbumFinderException : public std::logic_error {
