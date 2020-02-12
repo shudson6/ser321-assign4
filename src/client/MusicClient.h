@@ -7,7 +7,7 @@
 
 class MusicClient : public MediaClientGui {
 	private:
-		const char* filename;
+		string filename;
 		MusicLibrary* library;
 		AlbumFinder* finder;
 
@@ -16,8 +16,13 @@ class MusicClient : public MediaClientGui {
 		MusicClient(const char* _author, const char* _lastfmkey, const char* _filename);
 		~MusicClient();
 
+		void save();
+		void restore();
+
+		// instance methods called by the callbacks
 		void buildTree();
 		void findAlbum();
+		void menuClicked();
 		
 		// callbacks for various components, hopefully self-explanatory
 		static void XBtnCallback(Fl_Widget*, void*);
