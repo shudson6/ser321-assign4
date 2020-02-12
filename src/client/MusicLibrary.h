@@ -19,6 +19,7 @@ class MusicLibrary {
 		Json::Value toJSON();
 		bool save(string&);
 		void load(string&);
+		void load(const char*);
 
 	private:
 		std::map<string, Album> library;

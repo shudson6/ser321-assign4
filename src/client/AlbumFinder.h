@@ -9,6 +9,7 @@
 
 class AlbumFinder {
 	public:
+		AlbumFinder(const char* _lastfmkey);
 		AlbumFinder(string _lastfmKey);
 		Album query(string& title, string& artist);
 

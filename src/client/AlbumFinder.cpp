@@ -10,6 +10,8 @@
 
 const char* const AlbumFinder::URLFMT = "http://ws.audioscrobbler.com/2.0/?method=album.getinfo&artist=%s&album=%s&format=json&api_key=%s";
 
+AlbumFinder::AlbumFinder(const char* _lastfmkey) : lastfmKey(_lastfmkey) {}
+
 AlbumFinder::AlbumFinder(string _lastfmKey) {
 	lastfmKey = _lastfmKey;
 }

@@ -40,4 +40,21 @@
 		</exec>
 	</target>
 
+	<target name="test">
+		<cc outtype="executable" subsystem="console" outfile="${bin}/test">
+			<compilerarg value="-std=c++14"/>
+			<compilerarg value="-g"/>
+			<includepath>
+				<dirset dir="/" includes="usr/include,usr/local/include,usr/include/jsoncpp"/>
+			</includepath>
+			<libset dir="/usr/lib" libs="stdc++,fltk,fltk_images,curl,jsoncpp,pthread"/>
+			<libset dir="/usr/local/lib" libs="curlpp"/>
+			<fileset dir="${src.client}" includes="*.cpp"/>
+			<fileset dir="${src}/test" includes="test.cpp"/>
+		</cc>
+		<exec executable="${bin}/test">
+			<arg line="${lastfmkey}"/>
+		</exec>
+	</target>
+
 </project>

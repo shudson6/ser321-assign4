@@ -75,6 +75,11 @@ void MusicLibrary::load(string& fileName) {
 	}
 }
 
+void MusicLibrary::load(const char* filename) {
+	string foo(filename);
+	load(foo);
+}
+
 string MusicLibrary::loadFrom(string& fileName) {
 	std::ifstream in(fileName, std::ifstream::in);
 	string str;
