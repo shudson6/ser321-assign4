@@ -14,10 +14,10 @@ std::vector<Track>Album::getTracks() const {
 	return tracks;
 }
 
-Track* Album::getTrack(string name) const {
+const Track* Album::getTrack(string name) const {
 	for (std::vector<Track>::const_iterator iter = tracks.cbegin(); iter != tracks.cend(); iter++) {
 		if (iter->getTitle() == name) {
-			return const_cast<Track*> (&*iter);
+			return &*iter;
 		}
 	}
 	return NULL;

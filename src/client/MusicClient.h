@@ -22,7 +22,11 @@ class MusicClient : public MediaClientGui {
 		// instance methods called by the callbacks
 		void buildTree();
 		void findAlbum();
-		void menuClicked();
+		void menuEvent();
+		void treeEvent();
+		string treeEventReason();
+		void showInfo(const Album*);
+		void showInfo(const Album*, const Track*);
 		
 		// callbacks for various components, hopefully self-explanatory
 		static void XBtnCallback(Fl_Widget*, void*);

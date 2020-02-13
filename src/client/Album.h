@@ -14,7 +14,7 @@ class Album : public MusicDescription {
 		static Album fromJSON(Json::Value json);
 
 		std::vector<Track> getTracks() const;
-		Track* getTrack(string name) const;
+		const Track* getTrack(string name) const;
 		std::vector<string> getGenres() const;
 		string getImgURL() const;
 		string getSummary() const;
