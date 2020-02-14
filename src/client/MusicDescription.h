@@ -2,6 +2,7 @@
 #define __INCLUDE_SHUDSON6_MUSICDESCRIPTION
 
 #include <string>
+#include <json/json.h>
 
 #define NO_TITLE "[no title]"
 #define UNKNOWN_ARTIST "[unknown artist]"
@@ -22,6 +23,10 @@ class MusicDescription {
 		 * For objects less than an hour, hh is left off so you get mm:ss.
 		 */
 		const char* timeStr() const;
+		/**
+		 * Get a JSON object representing this MusicDescription
+		 */
+		Json::Value toJson() const;
 		
 		/**
 		 * Generates a string in [hh:]mm:ss format for the length of time

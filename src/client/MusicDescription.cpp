@@ -32,3 +32,19 @@ string MusicDescription::TimeStr(int secs) {
 	result << buf;
 	return result.str();
 }
+
+const char* MusicDescription::getArtist() const {
+	return artist.c_str();
+}
+
+int MusicDescription::getLength() const {
+	return len;
+}
+
+const char* MusicDescription::timeStr() const {
+	return lenstr.c_str();
+}
+
+const char* MusicDescription::getTitle() const { 
+	return title.c_str();
+}
