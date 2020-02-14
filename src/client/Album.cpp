@@ -1,21 +1,28 @@
 #include "Album.h"
 #include <algorithm>
+using namespace std;
 
-Album::Album(const string& _title, const string& _artist, std::vector<Track>& _tracks, std::vector<string>& _genres,
-		string& _imgURL, string& _summary) : MusicDescription(_title, _artist, calcLen(_tracks)) {
+Album::Album(const string& _title, const string& _artist, vector<Track>& _tracks, vector<string>& _genres,
+		const string& _imgURL, const string& _summary) : MusicDescription(_title, _artist, calcLen(_tracks)) {
 	tracks = _tracks;
 	genres = _genres;
 	imgURL = _imgURL;
 	summary = _summary;
-	std::sort(tracks.begin(), tracks.end());
+	sort(tracks.begin(), tracks.end());
 }
 
-std::vector<Track>Album::getTracks() const {
+Album::Album(const string& _title, const string& _artist, const string& _imgURL, const string& _summary)
+		: MusicDescription(_title, _artist, 0) {
+	imgURL = _imgURL;
+	summary = _summary;
+}
+
+vector<Track>Album::getTracks() const {
 	return tracks;
 }
 
 const Track* Album::getTrack(string name) const {
-	for (std::vector<Track>::const_iterator iter = tracks.cbegin(); iter != tracks.cend(); iter++) {
+	for (vector<Track>::const_iterator iter = tracks.cbegin(); iter != tracks.cend(); iter++) {
 		if (iter->getTitle() == name) {
 			return &*iter;
 		}
@@ -23,7 +30,7 @@ const Track* Album::getTrack(string name) const {
 	return NULL;
 }
 
-std::vector<string> Album::getGenres() const {
+vector<string> Album::getGenres() const {
 	return genres;
 }
 
@@ -35,9 +42,9 @@ string Album::getSummary() const {
 	return summary;
 }
 
-int Album::calcLen(std::vector<Track>& tracks) {
+int Album::calcLen(vector<Track>& tracks) {
 	int rt = 0;
-	for (std::vector<Track>::iterator iter = tracks.begin(); iter != tracks.cend(); iter++) {
+	for (vector<Track>::iterator iter = tracks.begin(); iter != tracks.cend(); iter++) {
 		rt += iter->getLength();
 	}
 	return rt;
@@ -85,8 +92,8 @@ Album Album::fromJSON(Json::Value json) {
 	return Album(t, a, tv, gv, u, s);
 }
 
-std::vector<Track> Album::parseTracks(Json::Value json) {
-	std::vector<Track> tv;
+vector<Track> Album::parseTracks(Json::Value json) {
+	vector<Track> tv;
 	for (auto iter = json.begin(); iter != json.end(); ++iter) {
 		Track t = Track::fromJSON(*iter);
 		tv.push_back(t);
@@ -94,8 +101,8 @@ std::vector<Track> Album::parseTracks(Json::Value json) {
 	return tv;
 }
 
-std::vector<string> Album::parseGenres(Json::Value json) {
-	std::vector<string> gv;
+vector<string> Album::parseGenres(Json::Value json) {
+	vector<string> gv;
 	for (auto iter = json.begin(); iter != json.end(); ++iter) {
 		gv.push_back(iter->asString());
 	}

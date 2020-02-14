@@ -9,7 +9,8 @@
 class Album : public MusicDescription {
 	public:
 		Album(const string& _title, const string& _artist, std::vector<Track>& _tracks, 
-				std::vector<string>& _genres, string& _imgURL, string& _summary);
+				std::vector<string>& _genres, const string& _imgURL, const string& _summary);
+		Album(const string& _title, const string& _artist, const string& _imgURL, const string& _summary);
 
 		static Album fromJSON(Json::Value json);
 

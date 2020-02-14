@@ -19,6 +19,8 @@ MusicClient::MusicClient(const char* _author, const char* _lastfmkey, const char
 	menubar->callback(MenuCallback, (void*) this);
 	tree->callback(TreeCallback, (void*) this);
 
+	// guarantee single-select mode
+	tree->selectmode(FL_TREE_SELECT_SINGLE);
 	buildTree();
 }
 
@@ -34,18 +36,32 @@ void MusicClient::buildTree() {
 	string* names = library->getAlbumNames();
 	for (int i = 0; i < library->size(); ++i) {
 		const Album* alb = library->getAlbum(names[i]);
-		cout << "Adding\033[96m Album\033[0m node: " << alb->getTitle() << endl;
-		tree->add(alb->getTitle().c_str());
-		string path(alb->getTitle());
-		path += "/";
-		auto tracks = alb->getTracks();
-		for (auto iter = tracks.cbegin(); iter != tracks.cend(); ++iter) {
-			cout << "Adding\033[36m Track\033[0m node: " << iter->getTitle() << endl;
-			tree->add((path + iter->getTitle()).c_str());
-		}
-		tree->close(tree->last(), 0);
+		addAlbumNode(*alb);
 	}
 	cout << "Tree complete." << endl;
+}
+
+Fl_Tree_Item* MusicClient::addAlbumNode(const Album& alb, int pos) {
+	Fl_Tree_Item* node;
+	if (pos >= 0) {
+		node = tree->insert(tree->root(), alb.getTitle().c_str(), pos);
+	} else {
+		node = tree->add(alb.getTitle().c_str());
+	}
+	if (!node) {
+		return NULL;
+	}
+	cout << "Adding album node: " << alb.getTitle() << endl;
+	node->user_data((void*) &alb);
+	if (alb.size() > 0) {
+		cout << "\tand Track nodes..." << endl;
+		// add tracks to the new node
+		auto tracks = alb.getTracks();
+		for (auto iter = tracks.cbegin(); iter != tracks.cend(); ++iter) {
+			tree->add(node, iter->getTitle().c_str())->user_data((void*) alb.getTrack(iter->getTitle()));
+		}
+	}
+	return node;
 }
 
 void MusicClient::save() {
@@ -61,15 +77,77 @@ void MusicClient::restore() {
 	buildTree();
 }
 
+void MusicClient::addAlbumAction() {
+	Album* al = getSelectedAlbum();
+	if (al && !library->getAlbum(al->getTitle())) {
+		cout << "Adding album " << al->getTitle() << " ... ";
+		if (library->addAlbum(*al)) {
+			/* sucessfully added:
+			 * it's copied into the library but if it wasn't already there, we must be dealing
+			 * with a dynamically-allocated album.
+			 * change the tree's reference to the version in the library and delete ours
+			 */
+			tree->find_item(al->getTitle().c_str())->user_data((void*) library->getAlbum(al->getTitle()));
+			delete al;
+			cout << "done." << endl;
+		} else {
+			cout << "failed." << endl;
+		}
+	} else if (!al) {
+		cout << "No album selected." << endl;
+	} else {
+		cout << "Album not added--title already in library." << endl;
+	}
+}
+
+void MusicClient::removeAlbumAction() {
+	Album* al = getSelectedAlbum();
+	if (al && library->getAlbum(al->getTitle())) {
+		// selected album is in library; just remove it
+		cout << "Removing album " << al->getTitle() << " from library ... ";
+		if (library->removeAlbum(al->getTitle())) {
+			cout << "done." << endl;
+		} else {
+			cout << "failed." << endl;
+		}
+	} else if (al) {
+		/* selected album not in library; we are dealing with a dynamically-allocated object
+		 * remove the tree node and delete the object
+		 */
+		tree->remove(tree->find_item(al->getTitle().c_str()));
+		delete al;
+	} else {
+		cout << "No album selected." << endl;
+	}
+}
+
+Album* MusicClient::getSelectedAlbum() {
+	// selected album node must match the albumInput text
+	string alb = albumInput->value();
+	Fl_Tree_Item* item = tree->find_item(trim(alb).c_str());
+	if (!item) {
+		return NULL;
+	} else if (item->depth() == 1) {
+		return (Album*) item->user_data();
+	} else if (item->depth() == 2) {
+		return (Album*) item->parent()->user_data();
+	}
+	return NULL;
+}
+
 void MusicClient::findAlbum() {
 	string art(artSrchInput->value());
 	string alb(albSrchInput->value());
+	art = wsToPlus(trim(art));
+	alb = wsToPlus(trim(alb));
 
 	cout << "Go, go, gadget Search!" << endl;
-	try {
-		finder->query(alb, art);
-	} catch (AlbumFinderException ex) {
-		cout << "Search failed." << endl;
+	// get album, add it to tree (unless null)
+	Album* found = finder->query(alb, art);
+	if (found) {
+		tree->select(addAlbumNode(*found, 0));
+	} else {
+		cout << "Search returned null." << endl;
 	}
 }
 
@@ -86,6 +164,8 @@ void MusicClient::menuEvent() {
 		restore();
 	} else if (path.compare("File/Tree Refresh") == 0) {
 		buildTree();
+	} else if (path.compare("Album/Add") == 0) {
+		addAlbumAction();
 	} else {
 		cout << "Selected path not yet implemented." << endl;
 	}
@@ -96,14 +176,16 @@ void MusicClient::treeEvent() {
 	cout << "Tree callback. Item selected: " << (item ? item->label() : "none") << endl;
 	cout << "Callback reason: " << treeEventReason() << endl;
 	if (tree->callback_reason() == FL_TREE_REASON_SELECTED) {
-		// take action based on the depth of the selected item
-		// Albums have depth 1 and Tracks depth 2
-		if (item->depth() == 1) {
-			showInfo(library->getAlbum(item->label()));
-		} else if (item->depth() == 2) {
-			const Album* alb = library->getAlbum(item->parent()->label());
-			showInfo(alb, alb->getTrack(item->label()));
-		}
+		showItem(item);
+	}
+}
+
+void MusicClient::showItem(Fl_Tree_Item* item) {
+	// type of item is determined by its depth
+	if (item->depth() == 1) { 
+		showInfo((Album*) item->user_data());
+	} else if (item->depth() == 2) {
+		showInfo((Album*) item->parent()->user_data(), (Track*) item->user_data());
 	}
 }
 
@@ -118,9 +200,9 @@ void MusicClient::showInfo(const Album* album) {
 }
 
 void MusicClient::showInfo(const Album* album, const Track* track) {
+	showInfo(album);
 	cout << "Updating view with: " << track->getTitle() << " - " << track->getArtist() << " - " << album->getTitle()
 			<< endl;
-	showInfo(album);
 	trackInput->value(track->getTitle().c_str());
 	authorInput->value(track->getArtist().c_str());
 	rankInput->value(to_string(track->getRank()).c_str());
@@ -166,4 +248,30 @@ void MusicClient::MenuCallback(Fl_Widget* w, void* obj) {
 
 void MusicClient::TreeCallback(Fl_Widget* w, void* obj) {
 	((MusicClient*) obj)->treeEvent();
+}
+
+string& MusicClient::trim(string& str) {
+	// right trim
+	while (str.length() > 0 && isWhiteSpace(str[str.length() - 1])) {
+		str.erase(str.length() - 1, 1);
+	}
+	// left trim
+	while (str.length() > 0 && isWhiteSpace(str[0])) {
+		str.erase(0, 1);
+	}
+	return str;
+}
+
+bool MusicClient::isWhiteSpace(char& c) {
+	return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+}
+
+string& MusicClient::wsToPlus(string& str) {
+	int pos;
+	for (int i = 0; i < str.length(); ++i) {
+		if (isWhiteSpace(str[i])) {
+			str.replace(i, 1, 1, '+');
+		}
+	}
+	return str;
 }

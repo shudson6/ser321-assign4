@@ -11,7 +11,8 @@ class AlbumFinder {
 	public:
 		AlbumFinder(const char* _lastfmkey);
 		AlbumFinder(string _lastfmKey);
-		Album query(string& title, string& artist);
+		// returns a pointer to new Album; caller responsible for deletion
+		Album* query(string& title, string& artist);
 
 	private:
 		string lastfmKey;
@@ -24,10 +25,6 @@ class AlbumFinder {
 		Track parseTrack(Json::Value, string);
 		std::vector<string> parseGenres(Json::Value);
 		string parseImg(Json::Value);
-
-		static string& trim(string&);
-		static string& wsToPlus(string&);
-		static bool isWhiteSpace(char&);
 
 		static const char* const URLFMT;
 };

@@ -7,6 +7,7 @@
 #include <curlpp/Easy.hpp>
 #include <curlpp/Exception.hpp>
 #include <json/json.h>
+using namespace std;
 
 const char* const AlbumFinder::URLFMT = "http://ws.audioscrobbler.com/2.0/?method=album.getinfo&artist=%s&album=%s&format=json&api_key=%s";
 
@@ -16,21 +17,24 @@ AlbumFinder::AlbumFinder(string _lastfmKey) {
 	lastfmKey = _lastfmKey;
 }
 
-Album AlbumFinder::query(string& title, string& artist) {
+Album* AlbumFinder::query(string& title, string& artist) {
 	// build search string
 	string urlStr = buildUrlStr(title, artist);
-	std::cout << "Executing query: " << urlStr << std::endl;
+	cout << "Executing query: " << urlStr << endl;
 	// now do it
 	string json(executeQuery(urlStr));
-	Album al(parse(json));
-	std::cout << "Retrieved " << al.getTitle() << " by " << al.getArtist() << " (" << al.size() << " tracks, "
-			<< al.getLengthStr() << ")" << std::endl;
+	Album* al = NULL;
+	try {
+		al = new Album(parse(json));
+		cout << "Retrieved " << al->getTitle() << " by " << al->getArtist() << " (" << al->size() << " tracks, "
+				<< al->getLengthStr() << ")" << endl;
+	} catch (AlbumFinderException& ex) {
+		cout << "AlbumFinder error: " << ex.what() << endl;
+	}
 	return al;
 }
 
 string AlbumFinder::buildUrlStr(string& title, string& artist) {
-	trim(title);
-	trim(artist);
 	// get a large enough buffer for the url (could -6 for the %s but nah)
 	int len = strlen(URLFMT) + title.length() + artist.length() + lastfmKey.length();
 	char* const buf = new char[len];
@@ -39,23 +43,22 @@ string AlbumFinder::buildUrlStr(string& title, string& artist) {
 	string url(buf);
 	// destroy the buffer then remove spaces and return the string
 	delete [] buf;
-	wsToPlus(url);
 	return url;
 }
 
 string AlbumFinder::executeQuery(string& url) {
 	string result;
 	try {
-		std::ostringstream os;
+		ostringstream os;
 		curlpp::Easy request;
 		request.setOpt(new curlpp::options::WriteStream(&os));
 		request.setOpt(new curlpp::options::Url(url.c_str()));
 		request.perform();
 		result = os.str();
 	} catch (curlpp::LogicError& er) {
-		std::cerr << er.what() << std::endl;
+		cerr << er.what() << endl;
 	} catch (curlpp::RuntimeError& er) {
-		std::cerr << er.what() << std::endl;
+		cerr << er.what() << endl;
 	}
 	return result;
 }
@@ -72,16 +75,16 @@ Album AlbumFinder::parse(string& jsonStr) {
 Album AlbumFinder::parseAlbum(Json::Value json) {
 	string title = json["name"].asString();
 	string artist = json["artist"].asString();
-	std::vector<Track> tracks(parseTracks(json["tracks"], title));
-	std::vector<string> genres(parseGenres(json["tags"]));
+	vector<Track> tracks(parseTracks(json["tracks"], title));
+	vector<string> genres(parseGenres(json["tags"]));
 	string img = parseImg(json["image"]);
 	string summ = json["wiki"]["summary"].asString();
 	Album result(title, artist, tracks, genres, img, summ);
 	return result;
 }
 
-std::vector<Track> AlbumFinder::parseTracks(Json::Value json, string album) {
-	std::vector<Track> tracks;
+vector<Track> AlbumFinder::parseTracks(Json::Value json, string album) {
+	vector<Track> tracks;
 	Json::Value trackArr = json["track"];
 	// trackArr holds a JSON array of tracks; parse each one
 	for (Json::Value::const_iterator iter = trackArr.begin(); iter != trackArr.end(); ++iter) {
@@ -92,14 +95,14 @@ std::vector<Track> AlbumFinder::parseTracks(Json::Value json, string album) {
 }
 
 Track AlbumFinder::parseTrack(Json::Value json, string album) {
-	int rank = std::stoi(json["@attr"]["rank"].asString());
-	int dur = std::stoi(json["duration"].asString());
+	int rank = stoi(json["@attr"]["rank"].asString());
+	int dur = stoi(json["duration"].asString());
 	Track t(json["name"].asString(), json["artist"]["name"].asString(), album, rank, dur);
 	return t;
 }
 
-std::vector<string> AlbumFinder::parseGenres(Json::Value tags) {
-	std::vector<string> genres;
+vector<string> AlbumFinder::parseGenres(Json::Value tags) {
+	vector<string> genres;
 	Json::Value genreArr = tags["tag"];
 	for (Json::Value::const_iterator iter = genreArr.begin(); iter != genreArr.end(); ++iter) {
 		genres.push_back((*iter)["name"].asString());
@@ -117,28 +120,3 @@ string AlbumFinder::parseImg(Json::Value imgArr) {
 	return "null";
 }
 
-string& AlbumFinder::trim(string& str) {
-	// right trim
-	while (str.length() > 0 && isWhiteSpace(str[str.length() - 1])) {
-		str.erase(str.length() - 1, 1);
-	}
-	// left trim
-	while (str.length() > 0 && isWhiteSpace(str[0])) {
-		str.erase(0, 1);
-	}
-	return str;
-}
-
-bool AlbumFinder::isWhiteSpace(char& c) {
-	return c == ' ' || c == '\t' || c == '\n' || c == '\r';
-}
-
-string& AlbumFinder::wsToPlus(string& str) {
-	int pos;
-	for (int i = 0; i < str.length(); ++i) {
-		if (isWhiteSpace(str[i])) {
-			str.replace(i, 1, 1, '+');
-		}
-	}
-	return str;
-}

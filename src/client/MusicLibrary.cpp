@@ -6,6 +6,8 @@
 MusicLibrary::MusicLibrary() {}
 
 bool MusicLibrary::addAlbum(Album& toAdd) {
+	// why  not just
+	// return library.insert(pair<string, Album>(toAdd.getTitle(), toAdd)) == &toAdd;
 	int b4 = library.size();
 	if (library.find(toAdd.getTitle()) == library.end()) {
 		library.insert(std::pair<string, Album>(toAdd.getTitle(), toAdd));
