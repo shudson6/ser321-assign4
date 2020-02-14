@@ -2,21 +2,20 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+using namespace std;
 
-MusicLibrary::MusicLibrary() {}
+MusicLibrary::MusicLibrary() : MusicDescription("Library", "Steven.Hudson", 0) {}
 
-bool MusicLibrary::addAlbum(Album& toAdd) {
-	// why  not just
-	// return library.insert(pair<string, Album>(toAdd.getTitle(), toAdd)) == &toAdd;
-	int b4 = library.size();
-	if (library.find(toAdd.getTitle()) == library.end()) {
-		library.insert(std::pair<string, Album>(toAdd.getTitle(), toAdd));
-	}
-	return library.size() != b4;
+bool MusicLibrary::addAlbum(const Album& toAdd) {
+	return albums.insert(pair<string, Album>(toAdd.getTitle(), toAdd)).second;
 }
 
-const Album* MusicLibrary::getAlbum(string name) const {
-	for (auto iter = library.begin(); iter != library.end(); ++iter) {
+bool MusicLibrary::removeAlbum(const char* name) {
+	return albums.erase(name) > 0;
+}
+
+const Album* MusicLibrary::getAlbum(const char* name) const {
+	for (auto iter = albums.begin(); iter != albums.end(); ++iter) {
 		if (iter->first == name) {
 			return &(iter->second);
 		}
@@ -24,74 +23,101 @@ const Album* MusicLibrary::getAlbum(string name) const {
 	return NULL;
 }
 
-string* MusicLibrary::getAlbumNames() const {
-	string* names = new string[library.size()];
-	auto iter = library.begin();
+const string* MusicLibrary::getAlbumNames() const {
+	string* names = new string[albums.size()];
+	auto iter = albums.begin();
 	int i = 0;
-	for (; iter != library.end(); ++i, ++iter) {
+	for (; iter != albums.end(); ++i, ++iter) {
 		names[i] = iter->second.getTitle();
 	}
 	return names;
 }
 
-bool MusicLibrary::removeAlbum(Album& toRm) {
-	return removeAlbum(toRm.getTitle());
-}
-
-bool MusicLibrary::removeAlbum(string name) {
-	return library.erase(name) > 0;
-}
-
 int MusicLibrary::size() const {
-	return library.size();
+	return albums.size();
 }
 
-Json::Value MusicLibrary::toJSON() {
+int MusicLibrary::getLength() const {
+	int length = 0;
+	for (auto iter = albums.cbegin(); iter != albums.cend(); ++iter) {
+		length += iter->second.getLength();
+	}
+	return length;
+}
+
+const char* MusicLibrary::timeStr() {
+	lenstr = TimeStr(getLength());
+	return lenstr.c_str();
+}
+
+Json::Value MusicLibrary::toJson() const {
 	Json::Value json;
-	for (auto iter = library.cbegin(); iter != library.cend(); ++iter) {
-		json[iter->first] = iter->second.toJSON();
+	for (auto iter = albums.cbegin(); iter != albums.cend(); ++iter) {
+		json[iter->first] = iter->second.toJson();
 	}
 	Json::Value libjson;
 	libjson["library"] = json;
 	return libjson;
 }
 
-
-bool MusicLibrary::save(string& fileName) {
-	std::ofstream out(fileName);
-	out << toJSON().toStyledString();
-	out.flush();
-	out.close();
-	return true;
+bool MusicLibrary::save(const char* filename) const {
+	try {
+		if (filename) {
+			ofstream out(filename);
+			out << toJson().toStyledString();
+			out.flush();
+			out.close();
+			return true;
+		}
+	} catch (...) {
+		cout << "Save failed for unknown reason." << endl;
+	}
+	return false;
 }
 
+// load will need some stuff i don't feel like putting in the header
+Json::Value jsonLibrary(string);
+string loadFrom(const char*);
 #define BUF_SIZE 4096
-void MusicLibrary::load(string& fileName) {
+
+void MusicLibrary::load(const char* filename) {
 	try {
-		Json::Value json = jsonLibrary(loadFrom(fileName));
-		std::cout << "Successfully loaded library." << std::endl;
-		std::map<string, Album> lib = parseJSON(json);
-		library = lib;
-	} catch (std::logic_error& ex) {
-		std::cout << "Failed to load library: " << ex.what() << std::endl;
+		Json::Value json = jsonLibrary(loadFrom(filename));
+		parseJson(json);
+		cout << "Successfully loaded library." << endl;
+	} catch (logic_error& ex) {
+		cout << "Failed to load library: " << ex.what() << endl;
 	}
 }
 
-void MusicLibrary::load(const char* filename) {
-	string foo(filename);
-	load(foo);
+void MusicLibrary::parseJson(Json::Value& json) {
+	albums.clear();
+	Json::Value::Members names = json.getMemberNames();
+	for (auto iter = names.begin(); iter != names.end(); ++iter) {
+		addAlbum(Album::fromJson(json[*iter]));
+	}
 }
 
-string MusicLibrary::loadFrom(string& fileName) {
-	std::ifstream in(fileName, std::ifstream::in);
+Json::Value jsonLibrary(string str) {
+	Json::Reader reader;
+	Json::Value json;
+	if (reader.parse(str, json, false)) {
+		return json["library"];
+	} else {
+		throw logic_error("Json::Reader could not parse input.");
+	}
+}
+
+string loadFrom(const char* fileName) {
+	ifstream in(fileName, ifstream::in);
 	string str;
 	char* buf;
 
 	if (in.good()) {
-		std::cout << "Loading from " << fileName << "...";
-		std::cout.flush();
+		cout << "Loading from " << fileName << "...";
+		cout.flush();
 	} else {
-		throw std::logic_error("Failed to open " + fileName);
+		throw logic_error("Failed to load library from file.");
 	}
 
  	buf = new char[BUF_SIZE];
@@ -101,25 +127,6 @@ string MusicLibrary::loadFrom(string& fileName) {
 		}
 	} while (!in.eof() && !in.bad());
 	delete [] buf;
-	std::cout << " done." << std::endl;
+	cout << " done." << endl;
 	return str;
-}
-
-Json::Value MusicLibrary::jsonLibrary(string str) {
-	Json::Reader reader;
-	Json::Value json;
-	if (reader.parse(str, json, false)) {
-		return json["library"];
-	} else {
-		throw std::logic_error("Json::Reader could not parse input.");
-	}
-}
-
-std::map<string, Album> MusicLibrary::parseJSON(Json::Value json) {
-	std::map<string, Album> lib;
-	Json::Value::Members names = json.getMemberNames();
-	for (auto iter = names.begin(); iter != names.end(); ++iter) {
-		lib.insert(std::pair<string, Album>(*iter, Album::fromJSON(json[*iter])));
-	}
-	return lib;
 }

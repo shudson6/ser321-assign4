@@ -95,10 +95,10 @@ bool Album::removeTrack(int rank) {
 }
 
 // toJson will require some helper functions that i don't feel like putting in the header
-Json::Value json_tracklist(vector<Track>&);
-Json::Value json_genres(vector<string>&);
+Json::Value json_tracklist(const vector<Track>&);
+Json::Value json_genres(const vector<string>&);
 
-Json::Value Album::toJson() {
+Json::Value Album::toJson() const {
 	// doing it this way will include the length, which the Java version doesn't do,
 	// but the extra member won't cause any compatibility issue
 	Json::Value json(MusicDescription::toJson());
@@ -109,7 +109,7 @@ Json::Value Album::toJson() {
 	return json;
 }
 
-Json::Value json_tracklist(vector<Track>& tracks) {
+Json::Value json_tracklist(const vector<Track>& tracks) {
 	Json::Value json(Json::arrayValue);
 	for (auto iter = tracks.cbegin(); iter != tracks.cend(); ++iter) {
 		json.append(iter->toJson());
@@ -117,10 +117,38 @@ Json::Value json_tracklist(vector<Track>& tracks) {
 	return json;
 }
 
-Json::Value json_genres(vector<string>& genres) {
+Json::Value json_genres(const vector<string>& genres) {
 	Json::Value json(Json::arrayValue);
 	for (auto iter = genres.cbegin(); iter != genres.cend(); ++iter) {
 		json.append(*iter);
 	}
 	return json;
+}
+
+// fromJson will require some helper functions that i don't feel like putting in the header
+void parseGenres(const Json::Value&, Album&);
+void parseTracks(const Json::Value&, Album&);
+
+Album Album::fromJson(const Json::Value& json) {
+	string t, a, u, s;
+	t = json["title"].asString();
+	a = json["artist"].asString();
+	u = json["image"].asString();
+	s = json["summary"].asString();
+	Album alb(t, a, u, s);
+	parseTracks(json["tracks"], alb);
+	parseGenres(json["genre"], alb);
+	return alb;
+}
+
+void parseTracks(const Json::Value& json, Album& alb) {
+	for (auto iter = json.begin(); iter != json.end(); ++iter) {
+		alb.addTrack(Track::fromJson(*iter));
+	}
+}
+
+void parseGenres(const Json::Value& json, Album& alb) {
+	for (auto iter = json.begin(); iter != json.end(); ++iter) {
+		alb.addGenre(iter->asCString());
+	}
 }

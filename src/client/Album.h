@@ -12,7 +12,7 @@
 
 class Album : public MusicDescription {
 	public:
-		static Album FromJSON(Json::Value json);
+		static Album fromJson(const Json::Value& json);
 		
 		Album(const std::string& _title, const std::string& _artist, const std::string& _imgUrl, const std::string& _summary);
 		Album(const char* _title, const char* _artist, const char* _imgUrl, const char* _summary);
@@ -55,7 +55,7 @@ class Album : public MusicDescription {
 		 */
 		bool removeTrack(int);
 		
-		Json::Value toJson();
+		Json::Value toJson() const;
 
 	private:
 		std::string imgUrl;

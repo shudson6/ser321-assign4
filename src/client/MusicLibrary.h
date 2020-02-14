@@ -2,31 +2,30 @@
 #define __INCLUDE_SHUDSON6_MUSICLIBRARY
 
 #include "Album.h"
+#include "MusicDescription.h"
 #include "Track.h"
-#include <string>
 #include <map>
+#include <string>
 #include <json/json.h>
 
-class MusicLibrary {
+class MusicLibrary : public MusicDescription {
 	public:
 		MusicLibrary();
-		bool addAlbum(Album& toAdd);
-		const Album* getAlbum(string name) const;
-		string* getAlbumNames() const;
-		bool removeAlbum(Album& toRm);
-		bool removeAlbum(string name);
+		bool addAlbum(const Album&);
+		bool removeAlbum(const char* name);
+		void load(const char* filename);
+		void parseJson(Json::Value&);
+		const char* timeStr();
+
+		const Album* getAlbum(const char* name) const;
+		const std::string* getAlbumNames() const;
 		int size() const;
-		Json::Value toJSON();
-		bool save(string&);
-		void load(string&);
-		void load(const char*);
+		int getLength() const;
+		Json::Value toJson() const;
+		bool save(const char* filename) const;
 
 	private:
-		std::map<string, Album> library;
-
-		string loadFrom(string&);
-		Json::Value jsonLibrary(string);
-		std::map<string, Album> parseJSON(Json::Value);
+		std::map<std::string, Album> albums;
 };
 
 #endif // __INCLUDE_SHUDSON6_MUSICLIBRARY
