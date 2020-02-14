@@ -34,7 +34,7 @@ Json::Value Track::toJson() const {
 	return json;
 }
 
-Track Track::fromJson(Json::Value json) {
+Track Track::fromJson(const Json::Value& json) {
 	string t = json["title"].asString();
 	string a = json["artist"].asString();
 	string r = json["album"].asString();
