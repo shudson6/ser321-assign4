@@ -1,110 +1,126 @@
 #include "Album.h"
-#include <algorithm>
+#include <iostream>
+#include <stdexcept>
 using namespace std;
 
-Album::Album(const string& _title, const string& _artist, vector<Track>& _tracks, vector<string>& _genres,
-		const string& _imgURL, const string& _summary) : MusicDescription(_title, _artist, calcLen(_tracks)) {
-	tracks = _tracks;
-	genres = _genres;
-	imgURL = _imgURL;
-	summary = _summary;
-	sort(tracks.begin(), tracks.end());
+Album::Album(const std::string& _title, const std::string& _artist, const string& _imgUrl, const string& _summary)
+	: Album(_title.c_str(), _artist.c_str(), _imgUrl.c_str(), _summary.c_str()) {
 }
 
-Album::Album(const string& _title, const string& _artist, const string& _imgURL, const string& _summary)
-		: MusicDescription(_title, _artist, 0) {
-	imgURL = _imgURL;
-	summary = _summary;
+Album::Album(const char* _title, const char* _artist, const char* _imgUrl, const char* _summary)
+	: MusicDescription(_title, _artist, 0) {
+	imgUrl = (_imgUrl ? _imgUrl : NO_IMAGE);
+	summary = (_summary ? _summary : NO_SUMMARY);
 }
 
-vector<Track>Album::getTracks() const {
-	return tracks;
+const char* Album::getImgUrl() const {
+	return imgUrl.c_str();
 }
 
-const Track* Album::getTrack(string name) const {
-	for (vector<Track>::const_iterator iter = tracks.cbegin(); iter != tracks.cend(); iter++) {
-		if (iter->getTitle() == name) {
+const char* Album::getSummary() const {
+	return summary.c_str();
+}
+
+const Track* Album::getTrack(int rank) const {
+	for (auto iter = tracks.cbegin(); iter != tracks.cend(); ++iter) {
+		if (iter->getRank() == rank) {
 			return &*iter;
 		}
 	}
 	return NULL;
 }
 
-vector<string> Album::getGenres() const {
+const vector<string>& Album::getGenres() const {
 	return genres;
 }
 
-string Album::getImgURL() const {
-	return imgURL;
-}
-
-string Album::getSummary() const {
-	return summary;
-}
-
-int Album::calcLen(vector<Track>& tracks) {
-	int rt = 0;
-	for (vector<Track>::iterator iter = tracks.begin(); iter != tracks.cend(); iter++) {
-		rt += iter->getLength();
-	}
-	return rt;
+const vector<Track>& Album::getTracks() const {
+	return tracks;
 }
 
 int Album::size() const {
 	return tracks.size();
 }
 
-Json::Value Album::toJSON() const {
-	Json::Value json;
-	json["artist"] = getArtist();
-	json["title"] = getTitle();
-	json["image"] = getImgURL();
-	json["summary"] = getSummary();
-	json["tracks"] = trackListJSON();
-	json["genre"] = genresJSON();
+bool Album::addGenre(const char* toAdd) {
+	try {
+		if (toAdd) {
+			genres.push_back(string(toAdd));
+			return true;
+		}
+	} catch (...) {
+		// catch-all just in case of an error on reallocation
+		cout << "Failed to add genre for unknown reason." << endl;
+	}
+	return false;
+}
+
+bool Album::removeGenre(const char* toRm) {
+	for (auto iter = genres.cbegin(); iter != genres.cend(); ++iter) {
+		if (*iter == toRm) {
+			genres.erase(iter);
+			return true;
+		}
+	}
+	return false;
+}
+
+const Track* Album::addTrack(const Track& toAdd) {
+	try {
+		// insert the element in order
+		for (auto iter = tracks.cbegin(); iter != tracks.cend(); ++iter) {
+			if (toAdd.getRank() == iter->getRank()) {
+				return &toAdd;
+			} else if (toAdd.getRank() < iter->getRank()) {
+				return &*tracks.insert(iter, toAdd);
+			}
+		}
+		// if the loop terminates, toAdd belongs at the end
+		tracks.push_back(toAdd);
+		return &*tracks.crbegin();
+	} catch (...) {
+		cout << "Failed to add track for unknown reason." << endl;
+		return NULL;
+	}
+}
+
+bool Album::removeTrack(int rank) {
+	for (auto iter = tracks.cbegin(); iter != tracks.cend(); ++iter) {
+		if (iter->getRank() == rank) {
+			tracks.erase(iter);
+			return true;
+		}
+	}
+	return false;
+}
+
+// toJson will require some helper functions that i don't feel like putting in the header
+Json::Value json_tracklist(vector<Track>&);
+Json::Value json_genres(vector<string>&);
+
+Json::Value Album::toJson() {
+	// doing it this way will include the length, which the Java version doesn't do,
+	// but the extra member won't cause any compatibility issue
+	Json::Value json(MusicDescription::toJson());
+	json["image"] = imgUrl;
+	json["summary"] = summary;
+	json["genre"] = json_genres(genres);
+	json["tracks"] = json_tracklist(tracks);
 	return json;
 }
 
-Json::Value Album::trackListJSON() const {
-	Json::Value arr(Json::arrayValue);
+Json::Value json_tracklist(vector<Track>& tracks) {
+	Json::Value json(Json::arrayValue);
 	for (auto iter = tracks.cbegin(); iter != tracks.cend(); ++iter) {
-		arr.append(iter->toJSON());
+		json.append(iter->toJson());
 	}
-	return arr;
+	return json;
 }
 
-Json::Value Album::genresJSON() const {
-	Json::Value arr(Json::arrayValue);
+Json::Value json_genres(vector<string>& genres) {
+	Json::Value json(Json::arrayValue);
 	for (auto iter = genres.cbegin(); iter != genres.cend(); ++iter) {
-		Json::Value str(*iter);
-		arr.append(str);
+		json.append(*iter);
 	}
-	return arr;
-}
-
-Album Album::fromJSON(Json::Value json) {
-	string t = json["title"].asString();
-	string a = json["artist"].asString();
-	string u = json["image"].asString();
-	string s = json["summary"].asString();
-	auto tv = parseTracks(json["tracks"]);
-	auto gv = parseGenres(json["genre"]);
-	return Album(t, a, tv, gv, u, s);
-}
-
-vector<Track> Album::parseTracks(Json::Value json) {
-	vector<Track> tv;
-	for (auto iter = json.begin(); iter != json.end(); ++iter) {
-		Track t = Track::fromJSON(*iter);
-		tv.push_back(t);
-	}
-	return tv;
-}
-
-vector<string> Album::parseGenres(Json::Value json) {
-	vector<string> gv;
-	for (auto iter = json.begin(); iter != json.end(); ++iter) {
-		gv.push_back(iter->asString());
-	}
-	return gv;
+	return json;
 }

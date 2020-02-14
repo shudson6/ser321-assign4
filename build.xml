@@ -50,7 +50,7 @@
 			</includepath>
 			<libset dir="/usr/lib" libs="stdc++,fltk,fltk_images,curl,jsoncpp,pthread"/>
 			<libset dir="/usr/local/lib" libs="curlpp"/>
-			<fileset dir="${src.client}" includes="Track.cpp,MusicDescription.cpp"/>
+			<fileset dir="${src.client}" includes="Album.cpp,Track.cpp,MusicDescription.cpp"/>
 			<fileset dir="${src}/test" includes="test.cpp"/>
 		</cc>
 		<exec executable="${bin}/test">

@@ -17,12 +17,12 @@ class MusicDescription {
 		/**
 		 * Length in seconds.
 		 */
-		int getLength() const;
+		virtual int getLength() const;
 		/**
 		 * Get a string representing the time of the object in hh:mm:ss format.
 		 * For objects less than an hour, hh is left off so you get mm:ss.
 		 */
-		const char* timeStr() const;
+		virtual const char* timeStr() const;
 		/**
 		 * Get a JSON object representing this MusicDescription.
 		 * Should be overridden by extending classes; call this version to get started easily
@@ -38,6 +38,8 @@ class MusicDescription {
 	private:
 		std::string title;
 		std::string artist;
+
+	protected:
 		// length in seconds
 		int len;
 		std::string lenstr;
