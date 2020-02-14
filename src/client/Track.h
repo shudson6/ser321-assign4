@@ -2,21 +2,24 @@
 #define __INCLUDE_SHUDSON6_TRACK
 
 #include "MusicDescription.h"
-#include <json/json.h>
+
+#define UNKNOWN_ALBUM "[unknown album]"
 
 class Track : public MusicDescription {
 	public:
-		Track(const string& _title, const string& _artist, const string& _album, int _rank, int _len);
+		static Track fromJson(Json::Value json);
 
-		static Track fromJSON(Json::Value json);
+		Track(const std::string& _title, const std::string& _artist, const std::string& _album, int _rank, int _len);
+		Track(const char* _title, const char* _artist, const char* _album, int _rank, int _len);
 
-		string getAlbum() const;
+		const char* getAlbum() const;
 		int getRank() const;
-		bool operator<(Track& that) const;
-		Json::Value toJSON() const;
+		Json::Value toJson() const;
+
+		bool operator<(Track&) const;
 
 	private:
-		string album;
+		std::string album;
 		int rank;
 };
 

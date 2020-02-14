@@ -48,3 +48,11 @@ const char* MusicDescription::timeStr() const {
 const char* MusicDescription::getTitle() const { 
 	return title.c_str();
 }
+
+Json::Value MusicDescription::toJson() const {
+	Json::Value json;
+	json["title"] = title;
+	json["artist"] = artist;
+	json["time"] = len;
+	return json;
+}

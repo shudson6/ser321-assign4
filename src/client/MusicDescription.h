@@ -24,9 +24,10 @@ class MusicDescription {
 		 */
 		const char* timeStr() const;
 		/**
-		 * Get a JSON object representing this MusicDescription
+		 * Get a JSON object representing this MusicDescription.
+		 * Should be overridden by extending classes; call this version to get started easily
 		 */
-		Json::Value toJson() const;
+		virtual Json::Value toJson() const;
 		
 		/**
 		 * Generates a string in [hh:]mm:ss format for the length of time
