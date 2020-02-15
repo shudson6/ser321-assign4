@@ -55,6 +55,7 @@ class Album : public MusicDescription {
 		 */
 		bool removeTrack(int);
 		
+		const char* timeStr() const;
 		Json::Value toJson() const;
 
 	private:
@@ -62,6 +63,9 @@ class Album : public MusicDescription {
 		std::string summary;
 		std::vector<std::string> genres;
 		std::vector<Track> tracks;
+
+		// called when track is added or removed to update album length
+		void recalcLen();
 };
 
 #endif // __INCLUDE_SHUDSON6_ALBUM

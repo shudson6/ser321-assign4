@@ -65,33 +65,55 @@ bool Album::removeGenre(const char* toRm) {
 	return false;
 }
 
+// not the most efficient way, but whatevs
+void Album::recalcLen() {
+	len = 0;
+	for (auto iter = tracks.cbegin(); iter != tracks.cend(); ++iter) {
+		len += iter->getLength();
+	}
+	lenstr = "";
+}
+
 const Track* Album::addTrack(const Track& toAdd) {
+	const Track* result;
 	try {
 		// insert the element in order
 		for (auto iter = tracks.cbegin(); iter != tracks.cend(); ++iter) {
 			if (toAdd.getRank() == iter->getRank()) {
-				return &toAdd;
+				result = &toAdd;
 			} else if (toAdd.getRank() < iter->getRank()) {
-				return &*tracks.insert(iter, toAdd);
+				result = &*tracks.insert(iter, toAdd);
 			}
 		}
 		// if the loop terminates, toAdd belongs at the end
 		tracks.push_back(toAdd);
-		return &*tracks.crbegin();
+		result = &*tracks.crbegin();
 	} catch (...) {
 		cout << "Failed to add track for unknown reason." << endl;
-		return NULL;
+		result = NULL;
 	}
+	if (result && result != &toAdd) {
+		recalcLen();
+	}
+	return result;
 }
 
 bool Album::removeTrack(int rank) {
 	for (auto iter = tracks.cbegin(); iter != tracks.cend(); ++iter) {
 		if (iter->getRank() == rank) {
 			tracks.erase(iter);
+			recalcLen();
 			return true;
 		}
 	}
 	return false;
+}
+
+const char* Album::timeStr() const {
+	if (lenstr.empty()) {
+		lenstr = TimeStr(len);
+	}
+	return lenstr.c_str();
 }
 
 // toJson will require some helper functions that i don't feel like putting in the header

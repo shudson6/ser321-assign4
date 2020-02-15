@@ -42,7 +42,7 @@ class MusicDescription {
 	protected:
 		// length in seconds
 		int len;
-		std::string lenstr;
+		mutable std::string lenstr;
 };
 
 #endif // __INCLUDE_SHUDSON6_MUSICDESCRIPTION
