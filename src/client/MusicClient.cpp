@@ -75,6 +75,7 @@ Fl_Tree_Item* MusicClient::addAlbumNode(Album& alb, int pos) {
 	if (node) {
 		node->user_data(&alb);
 		addTrackNodes(node);
+		tree->redraw();
 	}
 	return node;
 }
