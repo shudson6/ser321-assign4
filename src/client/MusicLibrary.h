@@ -12,6 +12,7 @@ class MusicLibrary : public MusicDescription {
 	public:
 		MusicLibrary();
 		bool addAlbum(const Album&);
+		bool addTrack(const Track&, const char* const);
 		bool removeAlbum(const char* name);
 		void load(const char* filename);
 		void parseJson(Json::Value&);

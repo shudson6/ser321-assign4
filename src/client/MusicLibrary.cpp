@@ -10,17 +10,27 @@ bool MusicLibrary::addAlbum(const Album& toAdd) {
 	return albums.insert(pair<string, Album>(toAdd.getTitle(), toAdd)).second;
 }
 
+bool MusicLibrary::addTrack(const Track& toAdd, const char* const alb) {
+	bool rslt = false;
+	Album* album = const_cast<Album*>(getAlbum(alb));
+	if (album) {
+		rslt = album->addTrack(toAdd);
+	}
+	return rslt;
+}
+
 bool MusicLibrary::removeAlbum(const char* name) {
 	return albums.erase(name) > 0;
 }
 
 const Album* MusicLibrary::getAlbum(const char* name) const {
-	for (auto iter = albums.begin(); iter != albums.end(); ++iter) {
-		if (iter->first == name) {
-			return &(iter->second);
-		}
+	const Album* alb = NULL;
+	try {
+		alb = &albums.at(string(name));
+	} catch (out_of_range& ex) {
+		// nothing to do here
 	}
-	return NULL;
+	return alb;
 }
 
 const string* MusicLibrary::getAlbumNames() const {
