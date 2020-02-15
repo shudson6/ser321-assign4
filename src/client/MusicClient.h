@@ -7,13 +7,12 @@
 
 class MusicClient : public MediaClientGui {
 	private:
-		string filename;
-		MusicLibrary* library;
+		char* filename;
+		MusicLibrary library;
 		AlbumFinder* finder;
 
 	public:
-		MusicClient(const char* _author, const char* _lastfmkey);
-		MusicClient(const char* _author, const char* _lastfmkey, const char* _filename);
+		MusicClient(const char* const _author, const char* const _lastfmkey, const char* const _filename);
 		~MusicClient();
 
 		// callbacks for various components, hopefully self-explanatory
@@ -24,13 +23,15 @@ class MusicClient : public MediaClientGui {
 
 	private:
 		void buildTree();
-		Fl_Tree_Item* addAlbumNode(const Album&, int = -1);
+		Fl_Tree_Item* addAlbumNode(Album&, int = -1);
+		void addTrackNodes(Fl_Tree_Item*);
 		Album* getSelectedAlbum();
 		void showItem(Fl_Tree_Item*);
 		void showInfo(const Album*);
 		void showInfo(const Album*, const Track*);
 
 		// instance methods called by the callbacks
+		void close();
 		void save();
 		void restore();
 		void findAlbum();
@@ -40,9 +41,8 @@ class MusicClient : public MediaClientGui {
 		void addAlbumAction();
 		void removeAlbumAction();
 		
-		static string& trim(string&);
-		static string& wsToPlus(string&);
-		static bool isWhiteSpace(char&);
+		static string trim(const char* const);
+		static string& sToPlus(string&);
 };
 
 #endif // __INCLUDE_SHUDSON6_MUSICCLIENT

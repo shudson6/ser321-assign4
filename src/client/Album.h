@@ -16,6 +16,7 @@ class Album : public MusicDescription {
 		
 		Album(const std::string& _title, const std::string& _artist, const std::string& _imgUrl, const std::string& _summary);
 		Album(const char* _title, const char* _artist, const char* _imgUrl, const char* _summary);
+		Album() : Album(0, 0, 0, 0) {}
 
 		const char* getImgUrl() const;
 		const char* getSummary() const;
