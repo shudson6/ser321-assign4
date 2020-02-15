@@ -31,6 +31,7 @@ class MusicClient : public MediaClientGui {
 		void treeRefresh();
 		Fl_Tree_Item* addAlbumNode(const Album&, int = -1);
 		void addTrackNodes(Fl_Tree_Item*);
+		void addTrackNode(const char*, const Track&);
 		Fl_Tree_Item* getSelectedAlbumNode();
 		Fl_Tree_Item* getSelectedTrackNode();
 		void showItem(Fl_Tree_Item*);

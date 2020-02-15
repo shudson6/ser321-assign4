@@ -156,36 +156,36 @@ void MusicClient::albumRemove() {
 
 void MusicClient::trackAdd() {
 	Fl_Tree_Item* node = getSelectedTrackNode();
-	if (node) {
-		cout << "Add track " << ((Track*) node->user_data())->getTitle() << " to library..." << endl;
-	}
-	if (node && string(node->parent()->parent()->label()).compare("Not Added") != 0) {
-		// track already exists
-		cout << "Not added: track already exists." << endl;
-	} else if (node) {
-		// track not already in library: check for album to put it on
-		Track* trk = (Track*) node->user_data();
-		const Album* alb = library.getAlbum(trk->getAlbum());
-		if (alb) {
+	Track* trk = (Track*) node->user_data();
+	Album* alb = (Album*) node->parent()->user_data();
+	// look for album in library; if there, attempt to add track
+	const Album* libalb = library.getAlbum(alb->getTitle());
+	if (libalb) {
+		if (library.addTrack(*trk, alb->getTitle())) {
+			addTrackNode(alb->getTitle(), *trk);
+			tree->redraw();
+			cout << "Added track " << trk->getTitle() << " to album " << alb->getTitle() << " in library." << endl;
 		} else {
-			cout << "No album. Adding..." << endl;
-			// create album with no tracks
-			alb = (Album*) node->parent()->user_data();
-			Album toAdd(alb->getTitle(), alb->getArtist(), alb->getImgUrl(), alb->getSummary());
-			auto genres = alb->getGenres();
-			for (auto iter = genres.cbegin(); iter != genres.cend(); ++iter) {
-				toAdd.addGenre(iter->c_str());
-			}
-			if (library.addAlbum(toAdd)) {
-				cout << "Added album " << toAdd.getTitle() << " to library. Now add track..." << endl;
-			} else {
-				cout << "Failed to add album; track cannot be added." << endl;
-			}
+			cout << "Failed to add track. Is it already there?" << endl;
 		}
 	} else {
-		cout << "No track selected." << endl;
+		// album not in library. we have to add it
+		cout << "Album " << alb->getTitle() << " not in library. Adding ... ";
+		cout.flush();
+		Album toAdd(alb->getTitle(), alb->getArtist(), alb->getImgUrl(), alb->getSummary());
+		if (library.addAlbum(toAdd)) {
+			cout << "done. Now adding track ... ";
+			if (library.addTrack(*trk, toAdd.getTitle())) {
+				addAlbumNode(*library.getAlbum(toAdd.getTitle()));
+				tree->redraw();
+				cout << "done." << endl;
+			} else {
+				cout << "failed." << endl;
+			}
+		} else {
+			cout << "failed." << endl;
+		}
 	}
-	tree->redraw();
 }
 
 void MusicClient::trackRemove() {
@@ -258,6 +258,14 @@ void MusicClient::addTrackNodes(Fl_Tree_Item* albNode) {
 	if (alb.size() > 0) {
 		cout << endl;
 	}
+}
+
+void MusicClient::addTrackNode(const char* alb, const Track& trk) {
+	stringstream ss(alb);
+	ss << "/" << trk.getTitle();
+	Fl_Tree_Item* node = tree->add(ss.str().c_str());
+	const Track* tptr = library.getAlbum(alb)->getTrack(trk.getRank());
+	node->user_data((void*) tptr);
 }
 	
 void MusicClient::SearchBtnCallback(Fl_Widget* w, void* obj) {

@@ -172,6 +172,23 @@
             }
          ]
       },
+      "Coda" : {
+         "artist" : "Led Zeppelin",
+         "genre" : [],
+         "image" : "https://lastfm.freetls.fastly.net/i/u/300x300/4d157f43620d4623a412d0da40c728aa.png",
+         "summary" : "Coda is the ninth and final studio album[4] by English rock band Led Zeppelin, released in 1982. This collection of outtakes from various sessions during Led Zeppelin's twelve-year career was released two years after the group had officially disbanded following the death of drummer John Bonham. The word coda, meaning a passage that ends a musical piece following the main body, was therefore chosen as a title.\n\nLed Zeppelin guitarist and producer Jimmy <a href=\"http://www.last.fm/music/Led+Zeppelin/Coda\">Read more on Last.fm</a>.",
+         "time" : 182,
+         "title" : "Coda",
+         "tracks" : [
+            {
+               "album" : "Coda",
+               "artist" : "Led Zeppelin",
+               "rank" : 2,
+               "time" : 182,
+               "title" : "Poor Tom"
+            }
+         ]
+      },
       "Lateralus" : {
          "artist" : "Tool",
          "genre" : [
