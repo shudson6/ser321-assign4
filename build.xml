@@ -6,7 +6,7 @@
 	<property name="src" value="./src"/>
 	<property name="src.client" value="${src}/client"/>
 	<property name="bin" value="./bin"/>
-	<property name="exe" value="test"/>
+	<property name="exe" value="assign4shudson6"/>
 	<property name="lastfmkey" value="none"/>
 	<property name="checkfile" value=""/>
 
